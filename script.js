@@ -29,17 +29,16 @@ function gameboard() {
 
     //Create a method that retrieves the current state of the board property
     //when the method is called, NOT variable
-    //const getBoard = () => board;
+    const getBoard = () => board;
 
-    //Create a method that replace a certain cell with player's unique token (X/O)
-    //when the user chooses that cell
-    const selectCell = function (row, column) {
-        //Insert player's input by changing the value of the board
-        board[row][column] = player.playerToken();
+    //Create a method to print board for showing players after each round
+    const printBoard = () => {
+        console.table(board);
     }
 
     return {
-        selectCell
+        getBoard,
+        printBoard
     };
 }
 
@@ -48,7 +47,7 @@ function gameboard() {
 //then assign a unique value to that player's input
 function player() {
     //Create a variable for storing the state of who the active player is
-    let activePlayer = " ";
+    let activePlayer = "player1";
     //Create two objects with key value pair for assigning unique properties
     //to the two players
     const players = {
@@ -70,7 +69,7 @@ function player() {
     //Create a method that changes the state of active player
     //after selectCell is called
     function switchActivePlayer () {
-        activePlayer = "player1"? "player2":"player1";
+        activePlayer = activePlayer === "player1"? "player2":"player1";
     }
 
     return {
@@ -78,3 +77,48 @@ function player() {
         switchActivePlayer
     }
 }
+
+function gameController() {
+    //Initialise the gameboard by retrieving the latest board
+    //gameboard() should have the latest state of board
+    const board = gameboard();
+    const currentBoard = board.getBoard();
+    //Make reference to the players object
+    const players = player();
+    //Start off by showing the initial board
+    const init = () => {
+        board.printBoard();
+    };
+    init();
+
+    //Create a method that replace a certain cell with player's unique token (X/O)
+    //when the user chooses that cell
+    const selectCell = (row, column) => {
+        //Insert player's input by changing the value of the board
+        currentBoard[row][column] = players.playerToken();
+    }
+    //Create a method to play round
+    function playRound(row, column) {
+        //Implementation logic should be:
+        //1. Active player (Player1 by default) select cell
+        //2. Check if move is valid - if valid, update board; otherwise no changes to board
+        //3. Update board
+        //4. Switch active player to the other player
+        //5. Repeat steps 2-4 unless win condition is reached
+        if (currentBoard[row][column] === " ") {
+            selectCell(row, column);
+            players.switchActivePlayer();
+            board.printBoard();
+        }
+        else {
+            console.log("Invalid move. Please try again.");
+            board.printBoard();
+        }
+    }
+    
+    return {
+        playRound        
+    }
+}
+
+const game = gameController();
