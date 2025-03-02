@@ -36,9 +36,14 @@ function gameboard() {
         console.table(board);
     }
 
+    const getRowNum = () => rows;
+    const getColNum = () => columns;
+
     return {
         getBoard,
-        printBoard
+        printBoard,
+        getRowNum,
+        getColNum
     };
 }
 
@@ -52,9 +57,11 @@ function player() {
     //to the two players
     const players = {
         player1:{
+            name: "Player 1",
             token:"X"
         },
         player2:{
+            name: "Player 2",
             token:"O"
         }
     };
@@ -72,9 +79,12 @@ function player() {
         activePlayer = activePlayer === "player1"? "player2":"player1";
     }
 
+    const getActivePlayer = () => players[activePlayer].name;
+
     return {
         playerToken,
-        switchActivePlayer
+        switchActivePlayer,
+        getActivePlayer
     }
 }
 
@@ -83,8 +93,13 @@ function gameController() {
     //gameboard() should have the latest state of board
     const board = gameboard();
     const currentBoard = board.getBoard();
+    const boardRows = board.getRowNum();
+    const boardCols = board.getColNum();
+    //Winning condition
+    const winCon = 3;
     //Make reference to the players object
     const players = player();
+
     //Start off by showing the initial board
     const init = () => {
         board.printBoard();
@@ -96,9 +111,10 @@ function gameController() {
     const selectCell = (row, column) => {
         //Insert player's input by changing the value of the board
         currentBoard[row][column] = players.playerToken();
-    }
+    };
+
     //Create a method to play round
-    function playRound(row, column) {
+    function playRound(row, column, token = players.playerToken()) {
         //Implementation logic should be:
         //1. Active player (Player1 by default) select cell
         //2. Check if move is valid - if valid, update board; otherwise no changes to board
@@ -107,17 +123,64 @@ function gameController() {
         //5. Repeat steps 2-4 unless win condition is reached
         if (currentBoard[row][column] === " ") {
             selectCell(row, column);
-            players.switchActivePlayer();
             board.printBoard();
+            //check win condition with the active player's token before switching player
+            checkWin(token);            
+            players.switchActivePlayer();
         }
         else {
             console.log("Invalid move. Please try again.");
             board.printBoard();
         }
     }
+
+    const checkRow = (token) => {
+        for (let i =0; i < boardRows; i++) {
+            const filteredRow = currentBoard[i].filter((entry) => entry === token);
+            if (filteredRow.length === winCon) {
+                return true;
+            }
+        }
+    }
+
+    const checkCol = (token) => {
+        for (let i=0; i < boardCols; i++) {
+            let counter = 0;
+            for (let j=0; j < boardRows; j++){
+                currentBoard[j][i] === token? counter++:counter+0;
+            }
+            if (counter === winCon) {
+                return true;
+            }
+        }
+    }
+
+    const checkDia = (token) => {
+        //Player can win from diagonal if they have token in the center cell
+        //then two cases to win from diagonal
+        if (currentBoard[1][1] === token) {
+            if (currentBoard[0][0] && currentBoard[2][2] === token ||
+                currentBoard[0][2] && currentBoard[2][0] === token){
+                return true;
+            }
+        }
+    }
+        
+    
+    //Create a method for checking if winning condition has been met after a player's move
+    //so it should focus on checking if that specific token has reached 3 in a row/column/diagonal
+    function checkWin (token) {
+        //check row     
+        //check column
+        //check diagonal
+        if (checkRow(token) === true || checkCol(token) === true || checkDia(token) === true) {
+            const winner = players.getActivePlayer();
+            console.log(`${winner} won!`);
+        }        
+    }
     
     return {
-        playRound        
+        playRound   
     }
 }
 
