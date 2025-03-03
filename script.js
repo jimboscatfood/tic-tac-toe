@@ -125,7 +125,8 @@ function gameController() {
             selectCell(row, column);
             board.printBoard();
             //check win condition with the active player's token before switching player
-            checkWin(token);            
+            checkWin(token);           
+            checkTie(); 
             players.switchActivePlayer();
         }
         else {
@@ -178,9 +179,18 @@ function gameController() {
             console.log(`${winner} won!`);
         }        
     }
+
+    //Create a method for checking ties
+    function checkTie () {
+        const flattened = currentBoard.flat();
+        if (!flattened.includes(" ")) {
+            console.log("It's a tie!");
+        }
+    }
+    
     
     return {
-        playRound   
+        playRound
     }
 }
 
