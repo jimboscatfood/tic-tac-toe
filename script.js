@@ -55,7 +55,7 @@ function player() {
     let activePlayer = "player1";
     //Create two objects with key value pair for assigning unique properties
     //to the two players
-    const players = {
+    const playersObj = {
         player1:{
             name: "Player 1",
             token:"X"
@@ -70,7 +70,7 @@ function player() {
     function playerToken() {
         //Before returning the player's unique token
         //it is necessary to find out which player's turn it is first
-        return activePlayer === "player1"? players.player1.token:players.player2.token;
+        return activePlayer === "player1"? playersObj.player1.token:playersObj.player2.token;
     }
 
     //Create a method that changes the state of active player
@@ -79,7 +79,7 @@ function player() {
         activePlayer = activePlayer === "player1"? "player2":"player1";
     }
 
-    const getActivePlayer = () => players[activePlayer].name;
+    const getActivePlayer = () => playersObj[activePlayer].name;
 
     return {
         playerToken,
@@ -95,7 +95,7 @@ function gameController() {
     const currentBoard = board.getBoard();
     const boardRows = board.getRowNum();
     const boardCols = board.getColNum();
-    //Winning condition
+    //Winning condition is 3 in a row
     const winCon = 3;
     //Make reference to the players object
     const players = player();
@@ -108,9 +108,9 @@ function gameController() {
 
     //Create a method that replace a certain cell with player's unique token (X/O)
     //when the user chooses that cell
-    const selectCell = (row, column) => {
+    const selectCell = (row, column, token) => {
         //Insert player's input by changing the value of the board
-        currentBoard[row][column] = players.playerToken();
+        currentBoard[row][column] = token;
     };
 
     //Create a method to play round
@@ -122,7 +122,7 @@ function gameController() {
         //4. Switch active player to the other player
         //5. Repeat steps 2-4 unless win condition is reached
         if (currentBoard[row][column] === " ") {
-            selectCell(row, column);
+            selectCell(row, column, token);
             board.printBoard();
             //check win condition with the active player's token before switching player
             checkWin(token);           
@@ -146,11 +146,11 @@ function gameController() {
 
     const checkCol = (token) => {
         for (let i=0; i < boardCols; i++) {
-            let counter = 0;
-            for (let j=0; j < boardRows; j++){
-                currentBoard[j][i] === token? counter++:counter+0;
+            let tokenCounter = 0;
+            for (let j=0; j < boardRows; j++) {
+                currentBoard[j][i] === token? tokenCounter++:tokenCounter+0;
             }
-            if (counter === winCon) {
+            if (tokenCounter === winCon) {
                 return true;
             }
         }
@@ -160,8 +160,8 @@ function gameController() {
         //Player can win from diagonal if they have token in the center cell
         //then two cases to win from diagonal
         if (currentBoard[1][1] === token) {
-            if (currentBoard[0][0] && currentBoard[2][2] === token ||
-                currentBoard[0][2] && currentBoard[2][0] === token){
+            if ((currentBoard[0][0] === token && currentBoard[2][2] === token) ||
+                (currentBoard[0][2] === token && currentBoard[2][0] === token)) {
                 return true;
             }
         }
@@ -190,8 +190,18 @@ function gameController() {
     
     
     return {
-        playRound
+        playRound,
+        getActivePlayer: players.getActivePlayer
     }
 }
 
 const game = gameController();
+
+//trial to fix bug that announces winner even when there's no 3 consecutive tokens
+// game.playRound(0,0)
+// game.playRound(1,1)
+// game.playRound(1,0)
+// game.playRound(2,0)
+// game.playRound(2,2)
+// console.log(game.activePlayer())
+// game.playRound(0,2)
