@@ -166,8 +166,7 @@ function gameController() {
             }
         }
     }
-        
-    
+   
     //Create a method for checking if winning condition has been met after a player's move
     //so it should focus on checking if that specific token has reached 3 in a row/column/diagonal
     function checkWin (token) {
@@ -191,11 +190,56 @@ function gameController() {
     
     return {
         playRound,
-        getActivePlayer: players.getActivePlayer
+        getActivePlayer: players.getActivePlayer,
+        getCurrentBoard: board.getBoard
     }
 }
 
-const game = gameController();
+function displayHandler() {
+    const game = gameController();
+    //Create reference to existing DOM elements in html
+    const announceDiv = document.querySelector(".announcement");
+    const boardDiv = document.querySelector(".gameboard");
+    //Create reference to the current gameboard
+    const currentBoard = game.getCurrentBoard();
+
+    //1. Initially, show the board with 9 buttons without tokens
+    //2. When a player press on a button, change the content of that button to that player's token
+    //which requires refreshing and updating the board's content
+    function updateDisplay() {
+        //Reset before every new move is displayed to refresh
+        boardDiv.textContent = "";
+        currentBoard.forEach((row, rowIndex) => {
+            row.forEach((entry, colIndex) => {
+                const tokenButton = document.createElement("button");
+                //Add class for styling
+                tokenButton.classList.add("cell");
+                tokenButton.dataset.row = rowIndex;
+                tokenButton.dataset.col = colIndex;
+                tokenButton.textContent = entry;
+                boardDiv.appendChild(tokenButton);
+            })
+        })
+    }
+
+    //Initiate display at the start of game
+    updateDisplay();
+
+    //Create a method to handle clicks on buttons
+    function clickHandler(e) {
+        const boardButton = e.target;
+        //Check if player is clicking on an empty cell
+        if (boardButton.className === "cell" && boardButton.textContent === " ") {
+                const rowIndex = boardButton.dataset.row;
+                const colIndex = boardButton.dataset.col;
+                game.playRound(rowIndex, colIndex);
+                updateDisplay();
+            }
+    }
+    boardDiv.addEventListener("click", clickHandler);
+}
+
+const game = displayHandler();
 
 //trial to fix bug that announces winner even when there's no 3 consecutive tokens
 // game.playRound(0,0)
@@ -203,5 +247,5 @@ const game = gameController();
 // game.playRound(1,0)
 // game.playRound(2,0)
 // game.playRound(2,2)
-// console.log(game.activePlayer())
-// game.playRound(0,2)
+// console.log(game.getActivePlayer())
+// game.playRound(2,1)
