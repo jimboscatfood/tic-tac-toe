@@ -81,10 +81,16 @@ function player() {
 
     const getActivePlayer = () => playersObj[activePlayer].name;
 
+    const setPlayerName = (name1, name2) => {
+        playersObj.player1.name = name1;
+        playersObj.player2.name = name2;
+    }
+
     return {
         playerToken,
         switchActivePlayer,
-        getActivePlayer
+        getActivePlayer,
+        setPlayerName
     }
 }
 
@@ -191,7 +197,8 @@ function gameController() {
     return {
         playRound,
         getActivePlayer: players.getActivePlayer,
-        getCurrentBoard: board.getBoard
+        getCurrentBoard: board.getBoard,
+        setPlayerName: players.setPlayerName
     }
 }
 
@@ -202,6 +209,31 @@ function displayHandler() {
     const boardDiv = document.querySelector(".gameboard");
     //Create reference to the current gameboard
     const currentBoard = game.getCurrentBoard();
+
+    //Create a function for asking for players' name before the game
+    const dialog = document.querySelector("dialog");
+    //Start game by showing the dialog
+    function startGame() {
+        dialog.showModal();
+    }
+    startGame();
+
+    function dialogHandler(e) {
+        const dialogButton = e.target;
+        if (dialogButton.id === "submit") {
+            const name1 = document.querySelector("#name1").value;
+            const name2 = document.querySelector("#name2").value;
+            game.setPlayerName(name1, name2);
+            dialog.close();
+        }
+        else if (dialogButton.id === "close") {
+            const name1 = document.querySelector("#name1").value;
+            const name2 = document.querySelector("#name2").value;
+            game.setPlayerName(name1, name2);
+        }
+    }
+
+    dialog.addEventListener("click", dialogHandler);
 
     //1. Initially, show the board with 9 buttons without tokens
     //2. When a player press on a button, change the content of that button to that player's token
