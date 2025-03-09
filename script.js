@@ -95,9 +95,10 @@ function player() {
 }
 
 function gameController() {
-    //Initialise the gameboard by retrieving the latest board
-    //gameboard() should have the latest state of board
+    //Initialise the gameboard by getting a board by creating the gameboard object
     const board = gameboard();
+    //Create a variable which first referenced to the board arr in the gameboard object
+    //Note that this currentBoard arr variable will later be modified by the below functions
     const currentBoard = board.getBoard();
     const boardRows = board.getRowNum();
     const boardCols = board.getColNum();
@@ -105,6 +106,8 @@ function gameController() {
     const winCon = 3;
     //Make reference to the players object
     const players = player();
+    //Create a variable to keep track of the winner
+    let winner = "";
 
     //Start off by showing the initial board
     const init = () => {
@@ -126,11 +129,11 @@ function gameController() {
         //2. Check if move is valid - if valid, update board; otherwise no changes to board
         //3. Update board
         //4. Switch active player to the other player
-        //5. Repeat steps 2-4 unless win condition is reached
+        //5. Repeat steps 2-4 unless winner condition is reached
         if (currentBoard[row][column] === " ") {
             selectCell(row, column, token);
             board.printBoard();
-            //check win condition with the active player's token before switching player
+            //check winner condition with the active player's token before switching player
             checkWin(token);           
             checkTie(); 
             players.switchActivePlayer();
@@ -149,7 +152,6 @@ function gameController() {
             }
         }
     }
-
     const checkCol = (token) => {
         for (let i=0; i < boardCols; i++) {
             let tokenCounter = 0;
@@ -161,10 +163,9 @@ function gameController() {
             }
         }
     }
-
     const checkDia = (token) => {
-        //Player can win from diagonal if they have token in the center cell
-        //then two cases to win from diagonal
+        //Player can winner from diagonal if they have token in the center cell
+        //then two cases to winner from diagonal
         if (currentBoard[1][1] === token) {
             if ((currentBoard[0][0] === token && currentBoard[2][2] === token) ||
                 (currentBoard[0][2] === token && currentBoard[2][0] === token)) {
@@ -172,7 +173,6 @@ function gameController() {
             }
         }
     }
-   
     //Create a method for checking if winning condition has been met after a player's move
     //so it should focus on checking if that specific token has reached 3 in a row/column/diagonal
     function checkWin (token) {
@@ -180,25 +180,28 @@ function gameController() {
         //check column
         //check diagonal
         if (checkRow(token) === true || checkCol(token) === true || checkDia(token) === true) {
-            const winner = players.getActivePlayer();
+            winner = players.getActivePlayer();
             console.log(`${winner} won!`);
         }        
     }
 
     //Create a method for checking ties
     function checkTie () {
-        const flattened = currentBoard.flat();
-        if (!flattened.includes(" ")) {
+        const flatArr = currentBoard.flat();
+        if (!flatArr.includes(" ")) {
             console.log("It's a tie!");
         }
     }
-    
+
+    const getCurrentBoard = () => currentBoard; 
+
+    const getWinner = () => winner;
     
     return {
         playRound,
-        getActivePlayer: players.getActivePlayer,
-        getCurrentBoard: board.getBoard,
-        setPlayerName: players.setPlayerName
+        getCurrentBoard,
+        setPlayerName: players.setPlayerName,
+        getWinner
     }
 }
 
@@ -207,14 +210,23 @@ function displayHandler() {
     //Create reference to existing DOM elements in html
     const announceDiv = document.querySelector(".announcement");
     const boardDiv = document.querySelector(".gameboard");
-    //Create reference to the current gameboard
+    //Create reference to the initial gameboard in the gameController object
+    //The playRound() method in clickHandler will change this arr variable for the updateDisplay
+    //function to display the latest arr
     const currentBoard = game.getCurrentBoard();
+    //Create a variable to track the game, stop game if game is won
+    let gameWon = false;
+    
+    function checkWinner () {
+        game.getWinner() !== ""? gameWon = true: null;
+    }
 
-    //Create a function for asking for players' name before the game
+    //Asking for players' name using dialog before the game
     const dialog = document.querySelector("dialog");
     //Start game by showing the dialog
     function startGame() {
         dialog.showModal();
+        updateDisplay();
     }
     startGame();
 
@@ -224,7 +236,6 @@ function displayHandler() {
             const name1 = document.querySelector("#name1").value;
             const name2 = document.querySelector("#name2").value;
             game.setPlayerName(name1, name2);
-            dialog.close();
         }
         else if (dialogButton.id === "close") {
             const name1 = document.querySelector("#name1").value;
@@ -232,7 +243,6 @@ function displayHandler() {
             game.setPlayerName(name1, name2);
         }
     }
-
     dialog.addEventListener("click", dialogHandler);
 
     //1. Initially, show the board with 9 buttons without tokens
@@ -254,17 +264,16 @@ function displayHandler() {
         })
     }
 
-    //Initiate display at the start of game
-    updateDisplay();
-
     //Create a method to handle clicks on buttons
     function clickHandler(e) {
         const boardButton = e.target;
         //Check if player is clicking on an empty cell
-        if (boardButton.className === "cell" && boardButton.textContent === " ") {
+        if (boardButton.className === "cell" && boardButton.textContent === " "
+            && gameWon === false) {
                 const rowIndex = boardButton.dataset.row;
                 const colIndex = boardButton.dataset.col;
                 game.playRound(rowIndex, colIndex);
+                checkWinner();
                 updateDisplay();
             }
     }
