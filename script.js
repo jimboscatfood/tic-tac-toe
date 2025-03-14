@@ -39,11 +39,14 @@ function gameboard() {
     const getRowNum = () => rows;
     const getColNum = () => columns;
 
+    const resetBoard = (gameBoard) => gameBoard.forEach((row) => row.splice(0,3," "," "," "));
+
     return {
         getBoard,
         printBoard,
         getRowNum,
-        getColNum
+        getColNum,
+        resetBoard
     };
 }
 
@@ -67,7 +70,7 @@ function player() {
     };
     //Create a method that returns the player's token
     
-    function playerToken() {
+    function getPlayerToken() {
         //Before returning the player's unique token
         //it is necessary to find out which player's turn it is first
         return activePlayer === "player1"? playersObj.player1.token:playersObj.player2.token;
@@ -87,7 +90,7 @@ function player() {
     }
 
     return {
-        playerToken,
+        getPlayerToken,
         switchActivePlayer,
         getActivePlayer,
         setPlayerName
@@ -95,11 +98,12 @@ function player() {
 }
 
 function gameController() {
-    //Initialise the gameboard by getting a board by creating the gameboard object
+    //Initialise the gameboard by getting a board from creating the gameboard object
     const board = gameboard();
     //Create a variable which first referenced to the board arr in the gameboard object
-    //Note that this currentBoard arr variable will later be modified by the below functions
-    const currentBoard = board.getBoard();
+    //Note that this gameBoard arr variable is only a reference to the board arr within the gameboard object scope
+    //which meanings modifying gameBoard will also change the board arr in the gameboard object environment
+    const gameBoard = board.getBoard();
     const boardRows = board.getRowNum();
     const boardCols = board.getColNum();
     //Winning condition is 3 in a row
@@ -119,18 +123,18 @@ function gameController() {
     //when the user chooses that cell
     const selectCell = (row, column, token) => {
         //Insert player's input by changing the value of the board
-        currentBoard[row][column] = token;
+        gameBoard[row][column] = token;
     };
 
     //Create a method to play round
-    function playRound(row, column, token = players.playerToken()) {
+    function playRound(row, column, token = players.getPlayerToken()) {
         //Implementation logic should be:
         //1. Active player (Player1 by default) select cell
         //2. Check if move is valid - if valid, update board; otherwise no changes to board
         //3. Update board
         //4. Switch active player to the other player
         //5. Repeat steps 2-4 unless winner condition is reached
-        if (currentBoard[row][column] === " ") {
+        if (gameBoard[row][column] === " ") {
             selectCell(row, column, token);
             board.printBoard();
             //check winner condition with the active player's token before switching player
@@ -146,7 +150,7 @@ function gameController() {
 
     const checkRow = (token) => {
         for (let i =0; i < boardRows; i++) {
-            const filteredRow = currentBoard[i].filter((entry) => entry === token);
+            const filteredRow = gameBoard[i].filter((entry) => entry === token);
             if (filteredRow.length === winCon) {
                 return true;
             }
@@ -156,7 +160,7 @@ function gameController() {
         for (let i=0; i < boardCols; i++) {
             let tokenCounter = 0;
             for (let j=0; j < boardRows; j++) {
-                currentBoard[j][i] === token? tokenCounter++:tokenCounter+0;
+                gameBoard[j][i] === token? tokenCounter++:tokenCounter+0;
             }
             if (tokenCounter === winCon) {
                 return true;
@@ -166,9 +170,9 @@ function gameController() {
     const checkDia = (token) => {
         //Player can winner from diagonal if they have token in the center cell
         //then two cases to winner from diagonal
-        if (currentBoard[1][1] === token) {
-            if ((currentBoard[0][0] === token && currentBoard[2][2] === token) ||
-                (currentBoard[0][2] === token && currentBoard[2][0] === token)) {
+        if (gameBoard[1][1] === token) {
+            if ((gameBoard[0][0] === token && gameBoard[2][2] === token) ||
+                (gameBoard[0][2] === token && gameBoard[2][0] === token)) {
                 return true;
             }
         }
@@ -187,21 +191,28 @@ function gameController() {
 
     //Create a method for checking ties
     function checkTie () {
-        const flatArr = currentBoard.flat();
+        const flatArr = gameBoard.flat();
         if (!flatArr.includes(" ")) {
+            winner = " ";
             console.log("It's a tie!");
         }
     }
 
-    const getCurrentBoard = () => currentBoard; 
+    const getBoard = () => gameBoard; 
 
     const getWinner = () => winner;
-    
+
+    const reset = () => {
+        board.resetBoard(gameBoard);
+        winner = ""
+    }
+
     return {
         playRound,
-        getCurrentBoard,
+        getBoard,
         setPlayerName: players.setPlayerName,
-        getWinner
+        getWinner,
+        reset
     }
 }
 
@@ -210,25 +221,30 @@ function displayHandler() {
     //Create reference to existing DOM elements in html
     const announceDiv = document.querySelector(".announcement");
     const boardDiv = document.querySelector(".gameboard");
+    //Create reference to start button
+    const restartButton = document.querySelector("#start");
     //Create reference to the initial gameboard in the gameController object
     //The playRound() method in clickHandler will change this arr variable for the updateDisplay
     //function to display the latest arr
-    const currentBoard = game.getCurrentBoard();
     //Create a variable to track the game, stop game if game is won
-    let gameWon = false;
+    let gameEnd = false;
     
-    function checkWinner () {
-        game.getWinner() !== ""? gameWon = true: null;
+    function checkGameEnd () {
+        game.getWinner() !== "" ? gameEnd = true: null;
     }
 
     //Asking for players' name using dialog before the game
     const dialog = document.querySelector("dialog");
     //Start game by showing the dialog
     function startGame() {
-        dialog.showModal();
-        updateDisplay();
-    }
-    startGame();
+            if (confirm("Do you want to start a new game?") == true) {
+                game.reset();
+                gameEnd = false;
+                updateDisplay();
+                dialog.showModal();
+            }
+        }
+    restartButton.addEventListener("click", startGame);
 
     function dialogHandler(e) {
         const dialogButton = e.target;
@@ -249,9 +265,10 @@ function displayHandler() {
     //2. When a player press on a button, change the content of that button to that player's token
     //which requires refreshing and updating the board's content
     function updateDisplay() {
+        const gameBoard = game.getBoard();
         //Reset before every new move is displayed to refresh
         boardDiv.textContent = "";
-        currentBoard.forEach((row, rowIndex) => {
+        gameBoard.forEach((row, rowIndex) => {
             row.forEach((entry, colIndex) => {
                 const tokenButton = document.createElement("button");
                 //Add class for styling
@@ -263,21 +280,23 @@ function displayHandler() {
             })
         })
     }
+    updateDisplay();
 
     //Create a method to handle clicks on buttons
     function clickHandler(e) {
         const boardButton = e.target;
         //Check if player is clicking on an empty cell
         if (boardButton.className === "cell" && boardButton.textContent === " "
-            && gameWon === false) {
+            && gameEnd === false) { 
                 const rowIndex = boardButton.dataset.row;
                 const colIndex = boardButton.dataset.col;
                 game.playRound(rowIndex, colIndex);
-                checkWinner();
+                checkGameEnd();
                 updateDisplay();
             }
     }
     boardDiv.addEventListener("click", clickHandler);
+
 }
 
 const game = displayHandler();
