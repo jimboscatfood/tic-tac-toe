@@ -193,7 +193,7 @@ function gameController() {
     function checkTie () {
         const flatArr = gameBoard.flat();
         if (!flatArr.includes(" ")) {
-            winner = " ";
+            winner = "tie";
             console.log("It's a tie!");
         }
     }
@@ -211,6 +211,7 @@ function gameController() {
         playRound,
         getBoard,
         setPlayerName: players.setPlayerName,
+        getActivePlayer: players.getActivePlayer,
         getWinner,
         reset
     }
@@ -219,7 +220,7 @@ function gameController() {
 function displayHandler() {
     const game = gameController();
     //Create reference to existing DOM elements in html
-    const announceDiv = document.querySelector(".announcement");
+    const announcer = document.querySelector(".announcer");
     const boardDiv = document.querySelector(".gameboard");
     //Create reference to start button
     const restartButton = document.querySelector("#start");
@@ -258,6 +259,7 @@ function displayHandler() {
         const gameBoard = game.getBoard();
         //Reset before every new move is displayed to refresh
         boardDiv.textContent = "";
+        announcer.textContent = "";
         gameBoard.forEach((row, rowIndex) => {
             row.forEach((entry, colIndex) => {
                 const tokenButton = document.createElement("button");
@@ -269,8 +271,19 @@ function displayHandler() {
                 boardDiv.appendChild(tokenButton);
             })
         })
+
+        const results = document.createElement("p");
+        if (game.getWinner() === "tie") {
+            announcer.textContent = "It's a tie!";
+        }
+        else if (game.getWinner() !== "" ) {
+            announcer.textContent = `${game.getWinner()} won!`;
+            appendChild(results);
+        }
+        else {
+            announcer.textContent = `${game.getActivePlayer()}'s turn.`;
+        }
     }
-    updateDisplay();
 
     //Create a method to handle clicks on buttons
     function clickHandler(e) {
