@@ -204,7 +204,7 @@ function gameController() {
 
     const reset = () => {
         board.resetBoard(gameBoard);
-        winner = ""
+        winner = "";
     }
 
     return {
@@ -223,15 +223,6 @@ function displayHandler() {
     const boardDiv = document.querySelector(".gameboard");
     //Create reference to start button
     const restartButton = document.querySelector("#start");
-    //Create reference to the initial gameboard in the gameController object
-    //The playRound() method in clickHandler will change this arr variable for the updateDisplay
-    //function to display the latest arr
-    //Create a variable to track the game, stop game if game is won
-    let gameEnd = false;
-    
-    function checkGameEnd () {
-        game.getWinner() !== "" ? gameEnd = true: null;
-    }
 
     //Asking for players' name using dialog before the game
     const dialog = document.querySelector("dialog");
@@ -239,7 +230,6 @@ function displayHandler() {
     function startGame() {
             if (confirm("Do you want to start a new game?") == true) {
                 game.reset();
-                gameEnd = false;
                 updateDisplay();
                 dialog.showModal();
             }
@@ -287,11 +277,10 @@ function displayHandler() {
         const boardButton = e.target;
         //Check if player is clicking on an empty cell
         if (boardButton.className === "cell" && boardButton.textContent === " "
-            && gameEnd === false) { 
+            && game.getWinner() === "") { 
                 const rowIndex = boardButton.dataset.row;
                 const colIndex = boardButton.dataset.col;
                 game.playRound(rowIndex, colIndex);
-                checkGameEnd();
                 updateDisplay();
             }
     }
