@@ -231,23 +231,22 @@ function displayHandler() {
     function startGame() {
             if (confirm("Do you want to start a new game?") == true) {
                 game.reset();
-                updateDisplay();
                 dialog.showModal();
             }
         }
     restartButton.addEventListener("click", startGame);
-
+    
     function dialogHandler(e) {
         const dialogButton = e.target;
         if (dialogButton.id === "submit") {
             const name1 = document.querySelector("#name1").value;
             const name2 = document.querySelector("#name2").value;
             game.setPlayerName(name1, name2);
+            updateDisplay();
         }
         else if (dialogButton.id === "close") {
-            const name1 = document.querySelector("#name1").value;
-            const name2 = document.querySelector("#name2").value;
-            game.setPlayerName(name1, name2);
+            game.setPlayerName("Player 1", "Player 2");
+            updateDisplay();
         }
     }
     dialog.addEventListener("click", dialogHandler);
@@ -271,19 +270,18 @@ function displayHandler() {
                 boardDiv.appendChild(tokenButton);
             })
         })
-
-        const results = document.createElement("p");
+        //For displaying messages to players
         if (game.getWinner() === "tie") {
             announcer.textContent = "It's a tie!";
         }
         else if (game.getWinner() !== "" ) {
             announcer.textContent = `${game.getWinner()} won!`;
-            appendChild(results);
         }
         else {
             announcer.textContent = `${game.getActivePlayer()}'s turn.`;
         }
     }
+
 
     //Create a method to handle clicks on buttons
     function clickHandler(e) {
